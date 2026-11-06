@@ -1,15 +1,22 @@
-package veterinaria;
+package veterinaria.vista;
 
 import javax.swing.*;
 import java.awt.*;
 
-/* botones.. Pacientes  Servicios  Factura.
+/**
+ * Barra de navegación superior con botones para alternar entre las vistas
+ * de Pacientes, Servicios y Factura mediante CardLayout.
+ * 
+ * @author Veterinaria App
+ * @version 1.0
  */
 public class BarraNavegacion extends JPanel {
 
     private static final String[] NOMBRES = {"Pacientes", "Servicios", "Factura"};
 
-    /*Construye la barra de navegación. */
+    /**
+     * Construye la barra de navegación creando los botones correspondientes.
+     */
     public BarraNavegacion() {
         setLayout(new FlowLayout(FlowLayout.LEFT, 0, 0));
         for (String nombre : NOMBRES) {
@@ -19,7 +26,11 @@ public class BarraNavegacion extends JPanel {
         }
     }
 
-    /*Busca el contenedor con CardLayout y muestra la vista. */
+    /**
+     * Busca el contenedor con CardLayout en la jerarquía superior y muestra la vista solicitada.
+     * 
+     * @param destino nombre de la vista a mostrar
+     */
     private void navegar(String destino) {
         Container contenedor = getParent();
         while (contenedor != null && !(contenedor.getLayout() instanceof CardLayout)) {

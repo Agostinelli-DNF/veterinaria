@@ -1,20 +1,33 @@
-package veterinaria;
+package veterinaria.vista;
+
+import veterinaria.controlador.VeterinariaController;
+import veterinaria.modelo.Paciente;
 
 import javax.swing.*;
 import java.awt.*;
 
-/*Permite registrar y eliminar pacientes de una lista.
-Solo se encarga de la interfaz; los datos de ejemplo viven acá.
+/**
+ * Vista encargada de la interfaz gráfica para registrar y eliminar pacientes,
+ * delegando la lógica de datos al controlador.
+ * 
+ * @author Veterinaria App
+ * @version 1.0
  */
 public class VistaPacientes extends JPanel {
 
+    private final VeterinariaController controlador;
     private final JTextField campoNombre = new JTextField(15);
     private final JTextField campoEspecie = new JTextField(15);
-    private final DefaultListModel<String> modeloLista = new DefaultListModel<>();
-    private final JList<String> listaPacientes = new JList<>(modeloLista);
+    private final DefaultListModel<Paciente> modeloLista = new DefaultListModel<>();
+    private final JList<Paciente> listaPacientes = new JList<>(modeloLista);
 
-    /*Construye la pantalla de pacientes y carga datos de ejemplo. */
-    public VistaPacientes() {
+    /**
+     * Construye la pantalla de pacientes asociándola al controlador.
+     * 
+     * @param controlador el controlador principal de la aplicación
+     */
+    public VistaPacientes(VeterinariaController controlador) {
+        this.controlador = controlador;
         setLayout(new BorderLayout());
         add(new BarraNavegacion(), BorderLayout.NORTH);
 
@@ -42,10 +55,22 @@ public class VistaPacientes extends JPanel {
 
         add(contenido, BorderLayout.CENTER);
 
-        cargarDatosDeEjemplo();
+        actualizarLista();
     }
 
-    /*Agrega el paciente escrito en el formulario a la lista. */
+    /**
+     * Actualiza el modelo de la lista visual con los pacientes del controlador.
+     */
+    public void actualizarLista() {
+        modeloLista.clear();
+        for (Paciente p : controlador.getListaPacientes()) {
+            modeloLista.addElement(p);
+        }
+    }
+
+    /**
+     * Captura los datos del formulario y solicita al controlador agregar el paciente.
+     */
     private void agregarPaciente() {
         String nombre = campoNombre.getText().trim();
         String especie = campoEspecie.getText().trim();
@@ -53,29 +78,31 @@ public class VistaPacientes extends JPanel {
             JOptionPane.showMessageDialog(this, "Ingresá un nombre para el paciente.");
             return;
         }
-        modeloLista.addElement(nombre + " (" + (especie.isEmpty() ? "sin especie" : especie) + ")");
+        controlador.agregarPaciente(nombre, especie);
         campoNombre.setText("");
         campoEspecie.setText("");
+        actualizarLista();
     }
 
-    /*Elimina el paciente seleccionado de la lista. */
+    /**
+     * Solicita al controlador eliminar el paciente seleccionado en la lista.
+     */
     private void eliminarPaciente() {
         int indice = listaPacientes.getSelectedIndex();
         if (indice == -1) {
             JOptionPane.showMessageDialog(this, "Seleccioná un paciente para eliminar.");
             return;
         }
-        modeloLista.remove(indice);
+        controlador.eliminarPaciente(indice);
+        actualizarLista();
     }
 
-    private void cargarDatosDeEjemplo() {
-        modeloLista.addElement("Rex (Perro)");
-        modeloLista.addElement("Michi (Gato)");
-        modeloLista.addElement("Piolín (Canario)");
-    }
-
-    /*Getter para que el controlador pueda acceder a la lista. */
-    public JList<String> getListaPacientes() {
+    /**
+     * Obtiene el componente JList de pacientes.
+     * 
+     * @return lista visual de pacientes
+     */
+    public JList<Paciente> getListaPacientes() {
         return listaPacientes;
     }
 }
