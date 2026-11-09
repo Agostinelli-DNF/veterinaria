@@ -8,7 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Vista encargada de la interfaz gráfica para registrar y eliminar pacientes,
+ * Vista encargada de la interfaz gráfica para registrar, modificar y eliminar pacientes,
  * interactuando con el controlador y manejando excepciones de persistencia.
  * 
  * @author Veterinaria App
@@ -42,10 +42,15 @@ public class VistaPacientes extends JPanel {
         formulario.add(campoEspecie);
 
         JButton botonAgregar = new JButton("Agregar");
+        JButton botonModificar = new JButton("Modificar");
         JButton botonEliminar = new JButton("Eliminar");
+
         botonAgregar.addActionListener(e -> agregarPaciente());
+        botonModificar.addActionListener(e -> modificarPaciente());
         botonEliminar.addActionListener(e -> eliminarPaciente());
+
         formulario.add(botonAgregar);
+        formulario.add(botonModificar);
         formulario.add(botonEliminar);
 
         JScrollPane scroll = new JScrollPane(listaPacientes);
@@ -55,6 +60,17 @@ public class VistaPacientes extends JPanel {
         contenido.add(scroll, BorderLayout.CENTER);
 
         add(contenido, BorderLayout.CENTER);
+
+        // Al seleccionar un paciente de la lista, cargar sus datos en los campos
+        listaPacientes.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                Paciente seleccionado = listaPacientes.getSelectedValue();
+                if (seleccionado != null) {
+                    campoNombre.setText(seleccionado.getNombre());
+                    campoEspecie.setText(seleccionado.getEspecie());
+                }
+            }
+        });
 
         actualizarLista();
     }
@@ -68,6 +84,8 @@ public class VistaPacientes extends JPanel {
             for (Paciente p : controlador.getListaPacientes()) {
                 modeloLista.addElement(p);
             }
+            campoNombre.setText("");
+            campoEspecie.setText("");
         } catch (DaoException e) {
             JOptionPane.showMessageDialog(this, "Error al cargar pacientes: " + e.getMessage(),
                     "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
@@ -86,11 +104,34 @@ public class VistaPacientes extends JPanel {
         }
         try {
             controlador.agregarPaciente(nombre, especie);
-            campoNombre.setText("");
-            campoEspecie.setText("");
             actualizarLista();
         } catch (DaoException e) {
             JOptionPane.showMessageDialog(this, "Error al guardar paciente: " + e.getMessage(),
+                    "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * Modifica el paciente seleccionado con los datos de los campos de texto.
+     */
+    private void modificarPaciente() {
+        Paciente seleccionado = listaPacientes.getSelectedValue();
+        if (seleccionado == null) {
+            JOptionPane.showMessageDialog(this, "Seleccioná un paciente de la lista para modificar.");
+            return;
+        }
+        String nombre = campoNombre.getText().trim();
+        String especie = campoEspecie.getText().trim();
+        if (nombre.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El nombre no puede estar vacío.");
+            return;
+        }
+        try {
+            controlador.actualizarPaciente(seleccionado.getId(), nombre, especie);
+            actualizarLista();
+            JOptionPane.showMessageDialog(this, "Paciente modificado con éxito.");
+        } catch (DaoException e) {
+            JOptionPane.showMessageDialog(this, "Error al modificar paciente: " + e.getMessage(),
                     "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
         }
     }

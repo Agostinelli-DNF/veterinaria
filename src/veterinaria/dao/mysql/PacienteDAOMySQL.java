@@ -7,7 +7,6 @@ import veterinaria.modelo.Paciente;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import com.mysql.cj.jdbc.Driver;
 /**
  * Implementación en MySQL de PacienteDAO utilizando JDBC.
  * 

@@ -8,7 +8,7 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * Vista encargada de la interfaz gráfica para gestionar los servicios veterinarios
+ * Vista encargada de la interfaz gráfica para gestionar, modificar y eliminar servicios veterinarios,
  * interactuando con el controlador y manejando excepciones de persistencia.
  * 
  * @author Veterinaria App
@@ -45,10 +45,15 @@ public class VistaServicios extends JPanel {
         superior.add(campoPrecio);
 
         JButton botonAgregar = new JButton("Agregar");
+        JButton botonModificar = new JButton("Modificar");
         JButton botonEliminar = new JButton("Eliminar");
+
         botonAgregar.addActionListener(e -> agregarServicio());
+        botonModificar.addActionListener(e -> modificarServicio());
         botonEliminar.addActionListener(e -> eliminarServicio());
+
         superior.add(botonAgregar);
+        superior.add(botonModificar);
         superior.add(botonEliminar);
 
         JScrollPane scroll = new JScrollPane(listaServicios);
@@ -69,6 +74,18 @@ public class VistaServicios extends JPanel {
         }
 
         comboTipos.addActionListener(e -> actualizarLista());
+
+        // Al seleccionar un servicio, cargar sus datos en los campos
+        listaServicios.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                Servicio seleccionado = listaServicios.getSelectedValue();
+                if (seleccionado != null) {
+                    campoNombre.setText(seleccionado.getNombre());
+                    campoPrecio.setText(String.valueOf(seleccionado.getPrecio()));
+                }
+            }
+        });
+
         actualizarLista();
     }
 
@@ -83,6 +100,8 @@ public class VistaServicios extends JPanel {
                 for (Servicio s : controlador.getServiciosPorTipo(tipo)) {
                     modeloLista.addElement(s);
                 }
+                campoNombre.setText("");
+                campoPrecio.setText("");
             } catch (DaoException e) {
                 JOptionPane.showMessageDialog(this, "Error al cargar servicios: " + e.getMessage(),
                         "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
@@ -113,13 +132,46 @@ public class VistaServicios extends JPanel {
                 return;
             }
             controlador.agregarServicio(tipo, nombre, precio);
-            campoNombre.setText("");
-            campoPrecio.setText("");
             actualizarLista();
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "El precio debe ser un número entero válido.");
         } catch (DaoException e) {
             JOptionPane.showMessageDialog(this, "Error al guardar servicio: " + e.getMessage(),
+                    "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * Modifica el servicio seleccionado con los datos de los campos de texto.
+     */
+    private void modificarServicio() {
+        Servicio seleccionado = listaServicios.getSelectedValue();
+        if (seleccionado == null) {
+            JOptionPane.showMessageDialog(this, "Seleccioná un servicio de la lista para modificar.");
+            return;
+        }
+        String tipo = (String) comboTipos.getSelectedItem();
+        String nombre = campoNombre.getText().trim();
+        String precioTexto = campoPrecio.getText().trim();
+
+        if (nombre.isEmpty() || precioTexto.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El nombre y el precio no pueden estar vacíos.");
+            return;
+        }
+
+        try {
+            int precio = Integer.parseInt(precioTexto);
+            if (precio < 0) {
+                JOptionPane.showMessageDialog(this, "El precio no puede ser negativo.");
+                return;
+            }
+            controlador.actualizarServicio(seleccionado.getId(), tipo, nombre, precio);
+            actualizarLista();
+            JOptionPane.showMessageDialog(this, "Servicio modificado con éxito.");
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "El precio debe ser un número entero válido.");
+        } catch (DaoException e) {
+            JOptionPane.showMessageDialog(this, "Error al modificar servicio: " + e.getMessage(),
                     "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
         }
     }

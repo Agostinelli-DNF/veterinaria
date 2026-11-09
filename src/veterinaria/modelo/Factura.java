@@ -10,17 +10,32 @@ import java.util.List;
  */
 public class Factura {
 
+    private Long id;
     private Paciente paciente;
     private List<Servicio> servicios;
     private int total;
 
     /**
-     * Construye una nueva Factura calculando automáticamente su total.
+     * Construye una nueva Factura sin ID (para inserciones).
      * 
      * @param paciente  el paciente asociado a la factura
      * @param servicios la lista de servicios incluidos
      */
     public Factura(Paciente paciente, List<Servicio> servicios) {
+        this.paciente = paciente;
+        this.servicios = servicios;
+        calcularTotal();
+    }
+
+    /**
+     * Construye una nueva Factura con ID (para registros existentes de la BD).
+     * 
+     * @param id        el identificador único de la factura
+     * @param paciente  el paciente asociado a la factura
+     * @param servicios la lista de servicios incluidos
+     */
+    public Factura(Long id, Paciente paciente, List<Servicio> servicios) {
+        this.id = id;
         this.paciente = paciente;
         this.servicios = servicios;
         calcularTotal();
@@ -36,6 +51,24 @@ public class Factura {
                 this.total += servicio.getPrecio();
             }
         }
+    }
+
+    /**
+     * Obtiene el identificador de la factura.
+     * 
+     * @return el ID
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * Establece el identificador de la factura.
+     * 
+     * @param id el nuevo ID
+     */
+    public void setId(Long id) {
+        this.id = id;
     }
 
     /**
@@ -91,6 +124,9 @@ public class Factura {
      */
     public String generarTextoFactura() {
         StringBuilder sb = new StringBuilder("FACTURA\n");
+        if (id != null) {
+            sb.append("Nº Factura: ").append(id).append("\n");
+        }
         sb.append("Paciente: ").append(paciente != null ? paciente.toString() : "Ninguno").append("\n");
         if (servicios != null) {
             for (Servicio s : servicios) {

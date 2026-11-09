@@ -12,7 +12,7 @@ import java.util.List;
 
 /**
  * Vista encargada de la interfaz gráfica para la facturación, interactuando
- * con el controlador y manejando excepciones de persistencia.
+ * con el controlador para generar y persistir facturas en MySQL.
  * 
  * @author Veterinaria App
  * @version 1.0
@@ -51,8 +51,8 @@ public class VistaFacturas extends JPanel {
         scrollServicios.setBorder(BorderFactory.createTitledBorder("Servicios (Ctrl/Shift para varios)"));
 
         JScrollPane scrollFactura = new JScrollPane(areaFactura);
-        scrollFactura.setBorder(BorderFactory.createTitledBorder("Factura"));
-        scrollFactura.setPreferredSize(new Dimension(260, 200));
+        scrollFactura.setBorder(BorderFactory.createTitledBorder("Factura (Guardada en MySQL)"));
+        scrollFactura.setPreferredSize(new Dimension(280, 200));
         areaFactura.setEditable(false);
         areaFactura.setFont(new Font("Monospaced", Font.PLAIN, 12));
 
@@ -66,7 +66,7 @@ public class VistaFacturas extends JPanel {
     }
 
     /**
-     * Actualiza los combos y listas consultando al controlador.
+     * Actualiza los combos y listas consultando directamente a la base de datos vía controlador.
      */
     public void actualizarDatos() {
         try {
@@ -86,7 +86,8 @@ public class VistaFacturas extends JPanel {
     }
 
     /**
-     * Solicita al controlador generar la factura con los elementos seleccionados.
+     * Solicita al controlador generar y persistir la factura en la base de datos
+     * utilizando los elementos seleccionados.
      */
     private void generarFactura() {
         Paciente paciente = (Paciente) comboPacientes.getSelectedItem();
@@ -97,8 +98,14 @@ public class VistaFacturas extends JPanel {
             return;
         }
 
-        Factura factura = controlador.generarFactura(paciente, elegidos);
-        areaFactura.setText(factura.generarTextoFactura());
+        try {
+            Factura factura = controlador.generarYGuardarFactura(paciente, elegidos);
+            areaFactura.setText(factura.generarTextoFactura());
+            JOptionPane.showMessageDialog(this, "¡Factura generada y guardada en MySQL con éxito!");
+        } catch (DaoException e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar la factura en la base de datos: " + e.getMessage(),
+                    "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /**
