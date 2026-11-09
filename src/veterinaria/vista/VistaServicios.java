@@ -1,6 +1,7 @@
 package veterinaria.vista;
 
 import veterinaria.controlador.VeterinariaController;
+import veterinaria.excepcion.DaoException;
 import veterinaria.modelo.Servicio;
 
 import javax.swing.*;
@@ -8,7 +9,7 @@ import java.awt.*;
 
 /**
  * Vista encargada de la interfaz gráfica para gestionar los servicios veterinarios
- * agrupados por categorías, delegando las operaciones al controlador.
+ * interactuando con el controlador y manejando excepciones de persistencia.
  * 
  * @author Veterinaria App
  * @version 1.0
@@ -51,16 +52,20 @@ public class VistaServicios extends JPanel {
         superior.add(botonEliminar);
 
         JScrollPane scroll = new JScrollPane(listaServicios);
-        scroll.setBorder(BorderFactory.createTitledBorder("Servicios"));
+        scroll.setBorder(BorderFactory.createTitledBorder("Servicios (Base de Datos)"));
 
         contenido.add(superior, BorderLayout.NORTH);
         contenido.add(scroll, BorderLayout.CENTER);
 
         add(contenido, BorderLayout.CENTER);
 
-        // Cargar tipos en el combo
-        for (String tipo : controlador.getTiposServicios()) {
-            comboTipos.addItem(tipo);
+        try {
+            for (String tipo : controlador.getTiposServicios()) {
+                comboTipos.addItem(tipo);
+            }
+        } catch (DaoException e) {
+            JOptionPane.showMessageDialog(this, "Error al cargar tipos de servicios: " + e.getMessage(),
+                    "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
         }
 
         comboTipos.addActionListener(e -> actualizarLista());
@@ -68,14 +73,19 @@ public class VistaServicios extends JPanel {
     }
 
     /**
-     * Actualiza la lista visual de servicios según el tipo seleccionado en el combo.
+     * Actualiza la lista visual de servicios según el tipo seleccionado.
      */
     public void actualizarLista() {
         String tipo = (String) comboTipos.getSelectedItem();
         modeloLista.clear();
         if (tipo != null) {
-            for (Servicio s : controlador.getServiciosPorTipo(tipo)) {
-                modeloLista.addElement(s);
+            try {
+                for (Servicio s : controlador.getServiciosPorTipo(tipo)) {
+                    modeloLista.addElement(s);
+                }
+            } catch (DaoException e) {
+                JOptionPane.showMessageDialog(this, "Error al cargar servicios: " + e.getMessage(),
+                        "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -108,21 +118,28 @@ public class VistaServicios extends JPanel {
             actualizarLista();
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "El precio debe ser un número entero válido.");
+        } catch (DaoException e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar servicio: " + e.getMessage(),
+                    "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     /**
-     * Solicita al controlador eliminar el servicio seleccionado de la categoría actual.
+     * Solicita al controlador eliminar el servicio seleccionado por su ID.
      */
     private void eliminarServicio() {
-        int indice = listaServicios.getSelectedIndex();
-        if (indice == -1) {
+        Servicio seleccionado = listaServicios.getSelectedValue();
+        if (seleccionado == null) {
             JOptionPane.showMessageDialog(this, "Seleccioná un servicio para eliminar.");
             return;
         }
-        String tipo = (String) comboTipos.getSelectedItem();
-        controlador.eliminarServicio(tipo, indice);
-        actualizarLista();
+        try {
+            controlador.eliminarServicio(seleccionado.getId());
+            actualizarLista();
+        } catch (DaoException e) {
+            JOptionPane.showMessageDialog(this, "Error al eliminar servicio: " + e.getMessage(),
+                    "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /**

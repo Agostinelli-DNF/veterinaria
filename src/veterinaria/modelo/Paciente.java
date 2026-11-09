@@ -8,18 +8,50 @@ package veterinaria.modelo;
  */
 public class Paciente {
 
+    private Long id;
     private String nombre;
     private String especie;
 
     /**
-     * Construye un nuevo Paciente con su nombre y especie.
+     * Construye un nuevo Paciente sin ID (para inserciones).
      * 
      * @param nombre  el nombre del paciente
-     * @param especie la especie del paciente (ej. Perro, Gato)
+     * @param especie la especie del paciente
      */
     public Paciente(String nombre, String especie) {
         this.nombre = nombre;
         this.especie = especie;
+    }
+
+    /**
+     * Construye un nuevo Paciente con ID (para registros existentes de la BD).
+     * 
+     * @param id      el identificador único del paciente
+     * @param nombre  el nombre del paciente
+     * @param especie la especie del paciente
+     */
+    public Paciente(Long id, String nombre, String especie) {
+        this.id = id;
+        this.nombre = nombre;
+        this.especie = especie;
+    }
+
+    /**
+     * Obtiene el identificador del paciente.
+     * 
+     * @return el ID
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * Establece el identificador del paciente.
+     * 
+     * @param id el nuevo ID
+     */
+    public void setId(Long id) {
+        this.id = id;
     }
 
     /**

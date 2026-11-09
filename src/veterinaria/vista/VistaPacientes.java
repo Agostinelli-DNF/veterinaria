@@ -1,6 +1,7 @@
 package veterinaria.vista;
 
 import veterinaria.controlador.VeterinariaController;
+import veterinaria.excepcion.DaoException;
 import veterinaria.modelo.Paciente;
 
 import javax.swing.*;
@@ -8,7 +9,7 @@ import java.awt.*;
 
 /**
  * Vista encargada de la interfaz gráfica para registrar y eliminar pacientes,
- * delegando la lógica de datos al controlador.
+ * interactuando con el controlador y manejando excepciones de persistencia.
  * 
  * @author Veterinaria App
  * @version 1.0
@@ -48,7 +49,7 @@ public class VistaPacientes extends JPanel {
         formulario.add(botonEliminar);
 
         JScrollPane scroll = new JScrollPane(listaPacientes);
-        scroll.setBorder(BorderFactory.createTitledBorder("Pacientes"));
+        scroll.setBorder(BorderFactory.createTitledBorder("Pacientes (Base de Datos)"));
 
         contenido.add(formulario, BorderLayout.NORTH);
         contenido.add(scroll, BorderLayout.CENTER);
@@ -59,12 +60,17 @@ public class VistaPacientes extends JPanel {
     }
 
     /**
-     * Actualiza el modelo de la lista visual con los pacientes del controlador.
+     * Actualiza el modelo de la lista visual consultando al controlador.
      */
     public void actualizarLista() {
-        modeloLista.clear();
-        for (Paciente p : controlador.getListaPacientes()) {
-            modeloLista.addElement(p);
+        try {
+            modeloLista.clear();
+            for (Paciente p : controlador.getListaPacientes()) {
+                modeloLista.addElement(p);
+            }
+        } catch (DaoException e) {
+            JOptionPane.showMessageDialog(this, "Error al cargar pacientes: " + e.getMessage(),
+                    "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -78,23 +84,33 @@ public class VistaPacientes extends JPanel {
             JOptionPane.showMessageDialog(this, "Ingresá un nombre para el paciente.");
             return;
         }
-        controlador.agregarPaciente(nombre, especie);
-        campoNombre.setText("");
-        campoEspecie.setText("");
-        actualizarLista();
+        try {
+            controlador.agregarPaciente(nombre, especie);
+            campoNombre.setText("");
+            campoEspecie.setText("");
+            actualizarLista();
+        } catch (DaoException e) {
+            JOptionPane.showMessageDialog(this, "Error al guardar paciente: " + e.getMessage(),
+                    "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /**
-     * Solicita al controlador eliminar el paciente seleccionado en la lista.
+     * Solicita al controlador eliminar el paciente seleccionado por su ID.
      */
     private void eliminarPaciente() {
-        int indice = listaPacientes.getSelectedIndex();
-        if (indice == -1) {
+        Paciente seleccionado = listaPacientes.getSelectedValue();
+        if (seleccionado == null) {
             JOptionPane.showMessageDialog(this, "Seleccioná un paciente para eliminar.");
             return;
         }
-        controlador.eliminarPaciente(indice);
-        actualizarLista();
+        try {
+            controlador.eliminarPaciente(seleccionado.getId());
+            actualizarLista();
+        } catch (DaoException e) {
+            JOptionPane.showMessageDialog(this, "Error al eliminar paciente: " + e.getMessage(),
+                    "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /**

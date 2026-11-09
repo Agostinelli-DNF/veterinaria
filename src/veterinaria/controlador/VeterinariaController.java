@@ -1,155 +1,142 @@
 package veterinaria.controlador;
 
+import veterinaria.dao.PacienteDAO;
+import veterinaria.dao.ServicioDAO;
+import veterinaria.dao.mysql.PacienteDAOMySQL;
+import veterinaria.dao.mysql.ServicioDAOMySQL;
+import veterinaria.excepcion.DaoException;
 import veterinaria.modelo.Factura;
 import veterinaria.modelo.Paciente;
 import veterinaria.modelo.Servicio;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
- * Controlador principal que gestiona la lógica de negocio y los datos en memoria
- * para pacientes, servicios y facturación de la veterinaria.
+ * Controlador principal que gestiona la lógica de negocio conectándose
+ * a los DAOs de la base de datos MySQL.
  * 
  * @author Veterinaria App
  * @version 1.0
  */
 public class VeterinariaController {
 
-    private final List<Paciente> listaPacientes;
-    private final Map<String, List<Servicio>> serviciosPorTipo;
+    private final PacienteDAO pacienteDAO;
+    private final ServicioDAO servicioDAO;
 
     /**
-     * Inicializa el controlador cargando datos de ejemplo (mock data).
+     * Inicializa el controlador instanciando las implementaciones DAO para MySQL.
      */
     public VeterinariaController() {
-        this.listaPacientes = new ArrayList<>();
-        this.serviciosPorTipo = new LinkedHashMap<>();
-        cargarDatosDeEjemplo();
+        this.pacienteDAO = new PacienteDAOMySQL();
+        this.servicioDAO = new ServicioDAOMySQL();
     }
 
     /**
-     * Carga datos iniciales de ejemplo para pacientes y servicios.
-     */
-    private void cargarDatosDeEjemplo() {
-        // Pacientes de ejemplo
-        listaPacientes.add(new Paciente("Rex", "Perro"));
-        listaPacientes.add(new Paciente("Michi", "Gato"));
-        listaPacientes.add(new Paciente("Piolín", "Canario"));
-
-        // Servicios por tipo con sus precios reales
-        List<Servicio> consultas = new ArrayList<>();
-        consultas.add(new Servicio("Consulta", "Consulta general", 5000));
-        consultas.add(new Servicio("Consulta", "Control de salud", 4000));
-        serviciosPorTipo.put("Consulta", consultas);
-
-        List<Servicio> vacunacion = new ArrayList<>();
-        vacunacion.add(new Servicio("Vacunación", "Vacuna antirrábica", 8000));
-        vacunacion.add(new Servicio("Vacunación", "Quíntuple", 10000));
-        serviciosPorTipo.put("Vacunación", vacunacion);
-
-        List<Servicio> cirugia = new ArrayList<>();
-        cirugia.add(new Servicio("Cirugía", "Castración", 45000));
-        cirugia.add(new Servicio("Cirugía", "Limpieza dental", 25000));
-        serviciosPorTipo.put("Cirugía", cirugia);
-
-        List<Servicio> estetica = new ArrayList<>();
-        estetica.add(new Servicio("Estética", "Baño", 9000));
-        estetica.add(new Servicio("Estética", "Corte de uñas", 1500));
-        serviciosPorTipo.put("Estética", estetica);
-    }
-
-    /**
-     * Obtiene la lista actual de pacientes.
+     * Obtiene la lista de todos los pacientes desde la base de datos.
      * 
      * @return lista de pacientes
+     * @throws DaoException si ocurre un error en la base de datos
      */
-    public List<Paciente> getListaPacientes() {
-        return listaPacientes;
+    public List<Paciente> getListaPacientes() throws DaoException {
+        return pacienteDAO.findAll();
     }
 
     /**
-     * Agrega un nuevo paciente a la lista.
+     * Agrega un nuevo paciente a la base de datos.
      * 
      * @param nombre  nombre del paciente
      * @param especie especie del paciente
+     * @throws DaoException si ocurre un error en la base de datos
      */
-    public void agregarPaciente(String nombre, String especie) {
+    public void agregarPaciente(String nombre, String especie) throws DaoException {
         if (nombre != null && !nombre.trim().isEmpty()) {
-            listaPacientes.add(new Paciente(nombre.trim(), especie.trim()));
+            Paciente paciente = new Paciente(nombre.trim(), especie.trim());
+            pacienteDAO.insert(paciente);
         }
     }
 
     /**
-     * Elimina un paciente de la lista por su índice.
+     * Elimina un paciente de la base de datos por su ID.
      * 
-     * @param indice posición del paciente en la lista
+     * @param id identificador único del paciente
+     * @throws DaoException si ocurre un error en la base de datos
      */
-    public void eliminarPaciente(int indice) {
-        if (indice >= 0 && indice < listaPacientes.size()) {
-            listaPacientes.remove(indice);
+    public void eliminarPaciente(Long id) throws DaoException {
+        if (id != null) {
+            pacienteDAO.delete(id);
         }
     }
 
     /**
      * Obtiene los tipos de servicios disponibles.
      * 
-     * @return conjunto con los nombres de los tipos de servicios
+     * @return conjunto de tipos de servicios
+     * @throws DaoException si ocurre un error en la base de datos
      */
-    public Set<String> getTiposServicios() {
-        return serviciosPorTipo.keySet();
+    public Set<String> getTiposServicios() throws DaoException {
+        Set<String> tipos = new LinkedHashSet<>();
+        tipos.add("Consulta");
+        tipos.add("Vacunación");
+        tipos.add("Cirugía");
+        tipos.add("Estética");
+        
+        // También podemos incluir dinámicamente los que estén en la BD
+        for (Servicio s : servicioDAO.findAll()) {
+            if (s.getTipo() != null) {
+                tipos.add(s.getTipo());
+            }
+        }
+        return tipos;
     }
 
     /**
-     * Obtiene la lista de servicios para un tipo específico.
+     * Obtiene la lista de servicios filtrados por tipo desde la base de datos.
      * 
      * @param tipo categoría del servicio
-     * @return lista de servicios de esa categoría
+     * @return lista de servicios
+     * @throws DaoException si ocurre un error en la base de datos
      */
-    public List<Servicio> getServiciosPorTipo(String tipo) {
-        return serviciosPorTipo.getOrDefault(tipo, new ArrayList<>());
+    public List<Servicio> getServiciosPorTipo(String tipo) throws DaoException {
+        return servicioDAO.findByTipo(tipo);
     }
 
     /**
-     * Obtiene todos los servicios disponibles (aplanados en una sola lista).
+     * Obtiene todos los servicios registrados en la base de datos.
      * 
-     * @return lista de todos los servicios
+     * @return lista de servicios
+     * @throws DaoException si ocurre un error en la base de datos
      */
-    public List<Servicio> getTodosLosServicios() {
-        List<Servicio> todos = new ArrayList<>();
-        for (List<Servicio> lista : serviciosPorTipo.values()) {
-            todos.addAll(lista);
-        }
-        return todos;
+    public List<Servicio> getTodosLosServicios() throws DaoException {
+        return servicioDAO.findAll();
     }
 
     /**
-     * Agrega un nuevo servicio a una categoría específica con su precio.
+     * Agrega un nuevo servicio a la base de datos.
      * 
      * @param tipo   categoría del servicio
      * @param nombre nombre del servicio
      * @param precio costo del servicio
+     * @throws DaoException si ocurre un error en la base de datos
      */
-    public void agregarServicio(String tipo, String nombre, int precio) {
+    public void agregarServicio(String tipo, String nombre, int precio) throws DaoException {
         if (tipo != null && nombre != null && !nombre.trim().isEmpty()) {
-            List<Servicio> lista = serviciosPorTipo.computeIfAbsent(tipo, k -> new ArrayList<>());
-            lista.add(new Servicio(tipo, nombre.trim(), precio));
+            Servicio servicio = new Servicio(tipo, nombre.trim(), precio);
+            servicioDAO.insert(servicio);
         }
     }
 
     /**
-     * Elimina un servicio de una categoría por su índice.
+     * Elimina un servicio de la base de datos por su ID.
      * 
-     * @param tipo   categoría del servicio
-     * @param indice posición en la lista de esa categoría
+     * @param id identificador único del servicio
+     * @throws DaoException si ocurre un error en la base de datos
      */
-    public void eliminarServicio(String tipo, int indice) {
-        List<Servicio> lista = serviciosPorTipo.get(tipo);
-        if (lista != null && indice >= 0 && indice < lista.size()) {
-            lista.remove(indice);
+    public void eliminarServicio(Long id) throws DaoException {
+        if (id != null) {
+            servicioDAO.delete(id);
         }
     }
 

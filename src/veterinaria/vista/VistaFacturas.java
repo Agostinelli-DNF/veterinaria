@@ -1,6 +1,7 @@
 package veterinaria.vista;
 
 import veterinaria.controlador.VeterinariaController;
+import veterinaria.excepcion.DaoException;
 import veterinaria.modelo.Factura;
 import veterinaria.modelo.Paciente;
 import veterinaria.modelo.Servicio;
@@ -10,8 +11,8 @@ import java.awt.*;
 import java.util.List;
 
 /**
- * Vista encargada de la interfaz gráfica para la facturación, permitiendo seleccionar
- * un paciente y múltiples servicios para generar la factura a través del controlador.
+ * Vista encargada de la interfaz gráfica para la facturación, interactuando
+ * con el controlador y manejando excepciones de persistencia.
  * 
  * @author Veterinaria App
  * @version 1.0
@@ -65,23 +66,27 @@ public class VistaFacturas extends JPanel {
     }
 
     /**
-     * Actualiza los combos y listas con los datos del controlador.
+     * Actualiza los combos y listas consultando al controlador.
      */
     public void actualizarDatos() {
-        comboPacientes.removeAllItems();
-        for (Paciente p : controlador.getListaPacientes()) {
-            comboPacientes.addItem(p);
-        }
+        try {
+            comboPacientes.removeAllItems();
+            for (Paciente p : controlador.getListaPacientes()) {
+                comboPacientes.addItem(p);
+            }
 
-        modeloServicios.clear();
-        for (Servicio s : controlador.getTodosLosServicios()) {
-            modeloServicios.addElement(s);
+            modeloServicios.clear();
+            for (Servicio s : controlador.getTodosLosServicios()) {
+                modeloServicios.addElement(s);
+            }
+        } catch (DaoException e) {
+            JOptionPane.showMessageDialog(this, "Error al cargar datos para factura: " + e.getMessage(),
+                    "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     /**
-     * Solicita al controlador generar la factura con los elementos seleccionados
-     * y muestra el resultado en el área de texto.
+     * Solicita al controlador generar la factura con los elementos seleccionados.
      */
     private void generarFactura() {
         Paciente paciente = (Paciente) comboPacientes.getSelectedItem();

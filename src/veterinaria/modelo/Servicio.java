@@ -8,14 +8,15 @@ package veterinaria.modelo;
  */
 public class Servicio {
 
+    private Long id;
     private String tipo;
     private String nombre;
     private int precio;
 
     /**
-     * Construye un nuevo Servicio.
+     * Construye un nuevo Servicio sin ID (para inserciones).
      * 
-     * @param tipo   la categoría o tipo de servicio (ej. Consulta, Vacunación)
+     * @param tipo   la categoría o tipo de servicio
      * @param nombre el nombre específico del servicio
      * @param precio el costo del servicio
      */
@@ -23,6 +24,39 @@ public class Servicio {
         this.tipo = tipo;
         this.nombre = nombre;
         this.precio = precio;
+    }
+
+    /**
+     * Construye un nuevo Servicio con ID (para registros existentes de la BD).
+     * 
+     * @param id     el identificador único del servicio
+     * @param tipo   la categoría o tipo de servicio
+     * @param nombre el nombre específico del servicio
+     * @param precio el costo del servicio
+     */
+    public Servicio(Long id, String tipo, String nombre, int precio) {
+        this.id = id;
+        this.tipo = tipo;
+        this.nombre = nombre;
+        this.precio = precio;
+    }
+
+    /**
+     * Obtiene el identificador del servicio.
+     * 
+     * @return el ID
+     */
+    public Long getId() {
+        return id;
+    }
+
+    /**
+     * Establece el identificador del servicio.
+     * 
+     * @param id el nuevo ID
+     */
+    public void setId(Long id) {
+        this.id = id;
     }
 
     /**
@@ -81,6 +115,6 @@ public class Servicio {
 
     @Override
     public String toString() {
-        return nombre + " — $" + precio;
+        return nombre + " (" + tipo + ") — $" + precio;
     }
 }
